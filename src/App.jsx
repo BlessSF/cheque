@@ -5,10 +5,21 @@ import { BankPanel, ChequeForm, ChequeList, FieldsPanel, BackgroundPanel } from 
 import { DEFAULT_BANKS, incNo, newProfile, todayISO } from './lib/layout.js'
 import { useLocalStorage } from './lib/useLocalStorage.js'
 
+/** Keep layouts saved by the previous version (positions untouched) but switch the date field on. */
+function loadProfiles() {
+  try {
+    const old = JSON.parse(localStorage.getItem('cm3_profiles'))
+    if (Array.isArray(old) && old.length) {
+      return old.map((b) => ({ ...b, fields: { ...b.fields, date: { ...b.fields.date, on: true } } }))
+    }
+  } catch { /* ignore */ }
+  return DEFAULT_BANKS.map(newProfile)
+}
+
 const blank = (id, no) => ({ id, payee: '', amount: 0, date: todayISO(), memo: '', no, on: true })
 
 export default function App() {
-  const [profiles, setProfiles] = useLocalStorage('cm3_profiles', () => DEFAULT_BANKS.map(newProfile))
+  const [profiles, setProfiles] = useLocalStorage('cm4_profiles', loadProfiles)
   const [bankIdx, setBankIdx] = useLocalStorage('cm3_bank', 0)
   const [settings, setSettings] = useLocalStorage('cm3_settings', { stars: false, currency: 'Pesos', nextNo: '6941334601' })
   const [entries, setEntries] = useLocalStorage('cm3_entries', () => [
