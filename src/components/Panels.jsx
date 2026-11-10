@@ -153,13 +153,22 @@ export function FieldsPanel({ profile, activeField, setActiveField, patchField, 
                 {FONTS.map((a) => <option key={a}>{a}</option>)}
               </select>
             </div>
-            {activeField === 'date' && (
+            {activeField === 'month' && (
               <div>
-                <label>Date style</label>
-                <select value={profile.dfmt} onChange={(e) => patchProfile({ dfmt: e.target.value })}>
-                  <option value="slash">MM/DD/YYYY</option>
-                  <option value="spaced">MM DD YYYY</option>
-                  <option value="long">Nov 09, 2026</option>
+                <label>Month style</label>
+                <select value={profile.mfmt} onChange={(e) => patchProfile({ mfmt: e.target.value })}>
+                  <option value="num">11</option>
+                  <option value="short">NOV</option>
+                  <option value="long">NOVEMBER</option>
+                </select>
+              </div>
+            )}
+            {activeField === 'year' && (
+              <div>
+                <label>Year style</label>
+                <select value={profile.yfmt} onChange={(e) => patchProfile({ yfmt: e.target.value })}>
+                  <option value="4">2026</option>
+                  <option value="2">26</option>
                 </select>
               </div>
             )}

@@ -2,24 +2,24 @@ import { useCallback, useState } from 'react'
 import Preview from './components/Preview.jsx'
 import PrintSheet from './components/PrintSheet.jsx'
 import { BankPanel, ChequeForm, ChequeList, FieldsPanel, BackgroundPanel } from './components/Panels.jsx'
-import { DEFAULT_BANKS, incNo, newProfile, todayISO } from './lib/layout.js'
+import { DEFAULT_BANKS, incNo, migrateProfile, newProfile, todayISO } from './lib/layout.js'
 import { useLocalStorage } from './lib/useLocalStorage.js'
 
-/** Keep layouts saved by the previous version (positions untouched) but switch the date field on. */
+/** Reuse layouts saved by earlier versions (positions untouched); date becomes Day / Month / Year. */
 function loadProfiles() {
-  try {
-    const old = JSON.parse(localStorage.getItem('cm3_profiles'))
-    if (Array.isArray(old) && old.length) {
-      return old.map((b) => ({ ...b, fields: { ...b.fields, date: { ...b.fields.date, on: true } } }))
-    }
-  } catch { /* ignore */ }
+  for (const key of ['cm4_profiles', 'cm3_profiles']) {
+    try {
+      const old = JSON.parse(localStorage.getItem(key))
+      if (Array.isArray(old) && old.length) return old.map(migrateProfile)
+    } catch { /* ignore */ }
+  }
   return DEFAULT_BANKS.map(newProfile)
 }
 
 const blank = (id, no) => ({ id, payee: '', amount: 0, date: todayISO(), memo: '', no, on: true })
 
 export default function App() {
-  const [profiles, setProfiles] = useLocalStorage('cm4_profiles', loadProfiles)
+  const [profiles, setProfiles] = useLocalStorage('cm5_profiles', loadProfiles)
   const [bankIdx, setBankIdx] = useLocalStorage('cm3_bank', 0)
   const [settings, setSettings] = useLocalStorage('cm3_settings', { stars: false, currency: 'Pesos', nextNo: '6941334601' })
   const [entries, setEntries] = useLocalStorage('cm3_entries', () => [
