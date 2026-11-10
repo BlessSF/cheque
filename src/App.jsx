@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import Preview from './components/Preview.jsx'
 import PrintSheet from './components/PrintSheet.jsx'
 import { BankPanel, ChequeForm, ChequeList, FieldsPanel, BackgroundPanel } from './components/Panels.jsx'
@@ -20,6 +20,9 @@ const blank = (id, no) => ({ id, payee: '', amount: 0, date: todayISO(), memo: '
 
 export default function App() {
   const [profiles, setProfiles] = useLocalStorage('cm5_profiles', loadProfiles)
+  // Self-heal: whatever is saved (older version, half-updated files) is brought up to date once at start.
+  // migrateProfile is safe to run repeatedly: it keeps positions and only adds what is missing.
+  useEffect(() => { setProfiles((all) => all.map(migrateProfile)) }, [setProfiles])
   const [bankIdx, setBankIdx] = useLocalStorage('cm3_bank', 0)
   const [settings, setSettings] = useLocalStorage('cm3_settings', { stars: false, currency: 'Pesos', nextNo: '6941334601' })
   const [entries, setEntries] = useLocalStorage('cm3_entries', () => [
