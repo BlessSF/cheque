@@ -4,13 +4,15 @@ import ChequeView from './ChequeView.jsx'
 export const PX_PER_MM = 2.6
 
 export default function Preview({
-  entry, profile, settings, activeField, setActiveField, patchField, bg, bgOpacity, guides, nav,
+  entry, profile, settings, locked, activeField, setActiveField, patchField, bg, bgOpacity, guides, nav,
 }) {
   const drag = useRef(null)
   const stage = useRef(null)
 
   const onFieldDown = (e, key) => {
     setActiveField(key)
+    stage.current?.focus()
+    if (locked) return // locked: selecting a field is fine, moving it is not
     const f = profile.fields[key]
     drag.current = { key, sx: e.clientX, sy: e.clientY, ox: Number(f.x), oy: Number(f.y) }
     e.currentTarget.setPointerCapture(e.pointerId)
@@ -29,6 +31,7 @@ export default function Preview({
 
   // arrow keys nudge the active field: 0.5 mm, Shift = 0.1 mm, Alt = 5 mm
   const onKeyDown = (e) => {
+    if (locked) return
     const step = e.shiftKey ? 0.1 : e.altKey ? 5 : 0.5
     const f = profile.fields[activeField]
     if (!f) return
@@ -47,13 +50,15 @@ export default function Preview({
       <div className="stage" ref={stage} tabIndex={0} onKeyDown={onKeyDown} onPointerMove={onMove} onPointerUp={onUp} onPointerCancel={onUp}>
         <ChequeView
           entry={entry} profile={profile} settings={settings} unit={PX_PER_MM}
-          editable activeField={activeField} onFieldDown={onFieldDown}
+          editable locked={locked} activeField={activeField} onFieldDown={onFieldDown}
           bg={bg} bgOpacity={bgOpacity} guides={guides}
         />
       </div>
       <p className="hint">
-        Drag a field to move it, or click the preview and use the arrow keys (Shift = 0.1 mm, Alt = 5 mm).
-        The dashed outline is the paper edge and is not printed.
+        {locked
+          ? 'Layout is locked, so fields cannot be moved by accident. Press Unlock to adjust positions.'
+          : 'Drag a field to move it, or click the preview and use the arrow keys (Shift = 0.1 mm, Alt = 5 mm).'}
+        {' '}The dashed outline is the paper edge and is not printed.
       </p>
     </div>
   )

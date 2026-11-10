@@ -40,8 +40,14 @@ export default function App() {
 
   /* ---- profile / fields ---- */
   const patchProfile = (p) => setProfiles((all) => all.map((b, i) => (i === bi ? { ...b, ...p } : b)))
-  const patchField = (key, p) =>
+  const locked = profile.locked !== false // saved per bank; locked unless explicitly unlocked
+  const setLocked = (v) => patchProfile({ locked: v })
+  const patchField = (key, p) => {
+    // safety net: while locked, position and width can never change
+    if (locked) { const { x, y, w, ...rest } = p; p = rest }
+    if (!Object.keys(p).length) return
     setProfiles((all) => all.map((b, i) => (i === bi ? { ...b, fields: { ...b.fields, [key]: { ...b.fields[key], ...p } } } : b)))
+  }
   const patchSettings = (p) => setSettings((s) => ({ ...s, ...p }))
 
   const resetBank = () => {
@@ -110,6 +116,7 @@ export default function App() {
       <button onClick={() => setSel((si + 1) % entries.length)}>▶</button>
       <span className="hint">Cheque {si + 1} of {entries.length}</span>
       <span className="grow" />
+      <button className={`lockbtn${locked ? ' on' : ''}`} onClick={() => setLocked(!locked)}>{locked ? '🔒 Locked' : '🔓 Unlocked'}</button>
       <label className="inline"><input type="checkbox" checked={guides} onChange={(e) => setGuides(e.target.checked)} /> Show field boxes</label>
     </>
   )
@@ -141,6 +148,7 @@ export default function App() {
               nextNo={settings.nextNo} setNextNo={(v) => patchSettings({ nextNo: v })}
             />
             <FieldsPanel
+              locked={locked} setLocked={setLocked}
               profile={profile} activeField={activeField} setActiveField={setActiveField}
               patchField={patchField} patchProfile={patchProfile} settings={settings} patchSettings={patchSettings}
             />
@@ -148,7 +156,7 @@ export default function App() {
           </section>
           <section>
             <Preview
-              entry={entry} profile={profile} settings={settings} activeField={activeField}
+              entry={entry} profile={profile} settings={settings} locked={locked} activeField={activeField}
               setActiveField={setActiveField} patchField={patchField} bg={bg} bgOpacity={bgOpacity}
               guides={guides} nav={nav}
             />

@@ -27,7 +27,7 @@ export const DEFAULT_BANKS = [
 ]
 
 export const newProfile = (name) => ({
-  name, mode: 'a4', pw: 297, ph: 210, nx: 0, ny: 0, mfmt: 'num', yfmt: '4', fields: baseFields(),
+  name, mode: 'a4', pw: 297, ph: 210, nx: 0, ny: 0, mfmt: 'num', yfmt: '4', locked: true, fields: baseFields(),
 })
 
 export const pageSize = (p) =>
@@ -94,5 +94,5 @@ export function migrateProfile(b) {
     }
   })
   const { dfmt, ...rest } = b
-  return { mfmt: 'num', yfmt: '4', ...rest, fields }
+  return { mfmt: 'num', yfmt: '4', locked: true, ...rest, fields }
 }

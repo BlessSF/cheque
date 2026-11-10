@@ -8,12 +8,12 @@ const PT_TO_MM = 0.3528
  * `editable` shows the field boxes and ignores the printer nudge (nudge only affects paper).
  */
 export default function ChequeView({
-  entry, profile, settings, unit, editable = false, activeField, onFieldDown, bg, bgOpacity = 0.6, guides = true,
+  entry, profile, settings, unit, editable = false, locked = false, activeField, onFieldDown, bg, bgOpacity = 0.6, guides = true,
 }) {
   const [W, H] = pageSize(profile)
   return (
     <div
-      className={`sheet${editable && guides ? ' guides' : ''}`}
+      className={`sheet${editable && guides ? ' guides' : ''}${locked ? ' locked' : ''}`}
       style={{ width: W * unit, height: H * unit }}
     >
       {editable && bg && (

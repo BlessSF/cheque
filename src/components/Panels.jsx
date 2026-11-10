@@ -118,23 +118,27 @@ export function ChequeList({ entries, sel, setSel, toggle, setAll, remove, impor
 const ALIGNS = ['left', 'center', 'right']
 const FONTS = ['Arial', 'Calibri', 'Courier New', 'Times New Roman', 'Verdana']
 
-export function FieldsPanel({ profile, activeField, setActiveField, patchField, patchProfile, settings, patchSettings }) {
+export function FieldsPanel({ locked, setLocked, profile, activeField, setActiveField, patchField, patchProfile, settings, patchSettings }) {
   const f = profile.fields[activeField]
   return (
     <div className="card">
       <h2>Fields on cheque</h2>
+      <button className={`lockbtn${locked ? ' on' : ''}`} onClick={() => setLocked(!locked)}>
+        {locked ? '🔒 Layout locked — click to unlock' : '🔓 Unlocked — click to lock'}
+      </button>
       {Object.entries(profile.fields).map(([k, fld]) => (
         <div className="chk" key={k}>
           <input type="checkbox" checked={fld.on} onChange={(e) => patchField(k, { on: e.target.checked })} />
           <button className={`link${k === activeField ? ' on' : ''}`} onClick={() => setActiveField(k)}>{fld.label}</button>
+          <span className="pos">{fld.x}, {fld.y} mm</span>
         </div>
       ))}
       {f && (
         <div className="fieldEd">
           <div className="row">
-            <Num label="X mm" value={f.x} onChange={(v) => patchField(activeField, { x: v })} />
-            <Num label="Y mm" value={f.y} onChange={(v) => patchField(activeField, { y: v })} />
-            <Num label="Width mm" value={f.w} onChange={(v) => patchField(activeField, { w: v })} />
+            <Num label="X mm" value={f.x} disabled={locked} onChange={(v) => patchField(activeField, { x: v })} />
+            <Num label="Y mm" value={f.y} disabled={locked} onChange={(v) => patchField(activeField, { y: v })} />
+            <Num label="Width mm" value={f.w} disabled={locked} onChange={(v) => patchField(activeField, { w: v })} />
           </div>
           <div className="row">
             <Num label="Font pt" value={f.size} onChange={(v) => patchField(activeField, { size: v })} />
