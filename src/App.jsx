@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import Preview from './components/Preview.jsx'
 import PrintSheet from './components/PrintSheet.jsx'
-import { BankPanel, ChequeForm, ChequeList, FieldsPanel, BackgroundPanel } from './components/Panels.jsx'
+import { AmountPanel, BankPanel, ChequeForm, ChequeList, DatePanel, FieldsPanel, BackgroundPanel } from './components/Panels.jsx'
 import { DEFAULT_BANKS, incNo, migrateProfile, newProfile, todayISO } from './lib/layout.js'
 import { useLocalStorage } from './lib/useLocalStorage.js'
 
@@ -24,7 +24,7 @@ export default function App() {
   // migrateProfile is safe to run repeatedly: it keeps positions and only adds what is missing.
   useEffect(() => { setProfiles((all) => all.map(migrateProfile)) }, [setProfiles])
   const [bankIdx, setBankIdx] = useLocalStorage('cm3_bank', 0)
-  const [settings, setSettings] = useLocalStorage('cm3_settings', { stars: false, currency: 'Pesos', nextNo: '6941334601' })
+  const [settings, setSettings] = useLocalStorage('cm3_settings', { stars: false, currency: 'Pesos', nextNo: '6941334602' })
   const [entries, setEntries] = useLocalStorage('cm3_entries', () => [
     { id: 1, payee: 'CARE 4 LIFE TRADING CORP.', amount: 10000, date: todayISO(), memo: '', no: '6941334601', on: true },
   ])
@@ -78,8 +78,16 @@ export default function App() {
   }
   const patchEntry = (p) => setEntries((all) => all.map((e, i) => (i === si ? { ...e, ...p } : e)))
   const newEntry = () => {
-    setEntries((all) => [...all, blank(nextId(), takeNo())])
+    setEntries((all) => [...all, { ...blank(nextId(), takeNo()), date: entry.date }]) // same date as the current cheque
     setSel(entries.length)
+  }
+  const duplicateEntry = () => {
+    setEntries((all) => [...all, { ...entry, id: nextId(), no: takeNo(), on: true }])
+    setSel(entries.length)
+  }
+  const applyToAll = () => {
+    if (!window.confirm(`Copy the layout of ${profile.name} (positions, sizes, date settings) to ALL other banks?`)) return
+    setProfiles((all) => all.map((b, i) => (i === bi ? b : { ...JSON.parse(JSON.stringify(profile)), name: b.name })))
   }
   const importRows = (rows) => {
     if (!rows.length) return
@@ -106,11 +114,14 @@ export default function App() {
   }
 
   /* ---- printing ---- */
-  const printTicked = () => {
-    const list = entries.filter((e) => e.on)
+  /** Ask before printing cheques that look unfinished (no payee or zero amount). */
+  const startPrint = (list) => {
     if (!list.length) { window.alert('Tick at least one cheque to print.'); return }
+    const bad = list.filter((e) => !e.payee.trim() || !(Number(e.amount) > 0))
+    if (bad.length && !window.confirm(`${bad.length} of ${list.length} cheque(s) have no payee or a zero amount. Print anyway?`)) return
     setJob({ entries: list })
   }
+  const printTicked = () => startPrint(entries.filter((e) => e.on))
   const onPrintDone = useCallback(() => setJob(null), [])
 
   const nav = (
@@ -135,13 +146,9 @@ export default function App() {
         </header>
         <main>
           <section className="side">
-            <BankPanel
-              profiles={profiles} bankIdx={bi} setBankIdx={setBankIdx} profile={profile}
-              patchProfile={patchProfile} resetBank={resetBank} addBank={addBank} deleteBank={deleteBank}
-            />
             <ChequeForm
               entry={entry} patch={patchEntry} currency={settings.currency}
-              onNew={newEntry} onPrintOne={() => setJob({ entries: [entry] })} onCalibrate={() => setJob({ calibration: true })}
+              onNew={newEntry} onDuplicate={duplicateEntry} onPrintOne={() => startPrint([entry])} onCalibrate={() => setJob({ calibration: true })}
             />
             <ChequeList
               entries={entries} sel={si} setSel={setSel}
@@ -150,11 +157,16 @@ export default function App() {
               remove={removeSel} importRows={importRows} clearAll={clearAll}
               nextNo={settings.nextNo} setNextNo={(v) => patchSettings({ nextNo: v })}
             />
+            <BankPanel
+              profiles={profiles} bankIdx={bi} setBankIdx={setBankIdx} profile={profile}
+              patchProfile={patchProfile} resetBank={resetBank} addBank={addBank} deleteBank={deleteBank} applyToAll={applyToAll}
+            />
             <FieldsPanel
               locked={locked} setLocked={setLocked}
-              profile={profile} activeField={activeField} setActiveField={setActiveField}
-              patchField={patchField} patchProfile={patchProfile} settings={settings} patchSettings={patchSettings}
+              profile={profile} activeField={activeField} setActiveField={setActiveField} patchField={patchField}
             />
+            <DatePanel profile={profile} locked={locked} patchField={patchField} patchProfile={patchProfile} />
+            <AmountPanel settings={settings} patchSettings={patchSettings} />
             <BackgroundPanel bg={bg} setBg={setBg} opacity={bgOpacity} setOpacity={setBgOpacity} />
           </section>
           <section>
