@@ -1,7 +1,11 @@
-import { useCallback, useEffect, useState } from 'react'
-import Preview from './components/Preview.jsx'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import TopBar from './components/TopBar.jsx'
+import Queue from './components/Queue.jsx'
+import Workspace from './components/Workspace.jsx'
+import Inspector from './components/Inspector.jsx'
 import PrintSheet from './components/PrintSheet.jsx'
-import { AmountPanel, BankPanel, ChequeForm, ChequeList, DatePanel, FieldsPanel, BackgroundPanel } from './components/Panels.jsx'
+import { ConfirmDialog, ImportDialog, PrintDialog, PromptDialog } from './components/Dialogs.jsx'
+import { Toasts } from './components/ui.jsx'
 import { DEFAULT_BANKS, incNo, migrateProfile, newProfile, todayISO } from './lib/layout.js'
 import { useLocalStorage } from './lib/useLocalStorage.js'
 
@@ -33,18 +37,28 @@ export default function App() {
   const [bg, setBg] = useState(null)
   const [bgOpacity, setBgOpacity] = useState(0.6)
   const [guides, setGuides] = useState(true)
-  const [job, setJob] = useState(null)
+  const [job, setJob] = useState(null) // what the hidden print sheet renders
+  const [dialog, setDialog] = useState(null) // the one open dialog, if any
+  const [toasts, setToasts] = useState([])
+  const toastId = useRef(0)
+
+  const toast = useCallback((text) => {
+    const id = ++toastId.current
+    setToasts((t) => [...t, { id, text }])
+    setTimeout(() => setToasts((t) => t.filter((x) => x.id !== id)), 2600)
+  }, [])
 
   const bi = Math.min(bankIdx, profiles.length - 1)
   const profile = profiles[bi]
   const si = Math.min(sel, entries.length - 1)
   const entry = entries[si]
   const nextId = () => Math.max(0, ...entries.map((e) => e.id)) + 1
+  const closeDialog = () => setDialog(null)
 
   /* ---- profile / fields ---- */
-  const patchProfile = (p) => setProfiles((all) => all.map((b, i) => (i === bi ? { ...b, ...p } : b)))
   const locked = profile.locked !== false // saved per bank; locked unless explicitly unlocked
-  const setLocked = (v) => patchProfile({ locked: v })
+  const patchProfile = (p) => setProfiles((all) => all.map((b, i) => (i === bi ? { ...b, ...p } : b)))
+  const setLocked = (v) => { patchProfile({ locked: v }); toast(v ? 'Layout locked' : 'Layout unlocked') }
   const patchField = (key, p) => {
     // safety net: while locked, position and width can never change
     if (locked) { const { x, y, w, ...rest } = p; p = rest }
@@ -53,22 +67,42 @@ export default function App() {
   }
   const patchSettings = (p) => setSettings((s) => ({ ...s, ...p }))
 
-  const resetBank = () => {
-    if (window.confirm(`Reset the layout for ${profile.name} to the Excel starting positions?`)) {
+  const resetBank = () => setDialog({
+    type: 'confirm', title: `Reset ${profile.name}?`, danger: true, confirmLabel: 'Reset layout',
+    message: 'Every field on this bank goes back to the positions from your Excel template. Other banks are not changed.',
+    onConfirm: () => {
       setProfiles((all) => all.map((b, i) => (i === bi ? newProfile(b.name) : b)))
-    }
-  }
-  const addBank = () => {
-    const name = (window.prompt('Name for the new bank?') || '').trim()
-    if (!name) return
-    setProfiles((all) => [...all, { ...JSON.parse(JSON.stringify(profile)), name }])
-    setBankIdx(profiles.length)
-  }
-  const deleteBank = () => {
-    if (profiles.length < 2 || !window.confirm(`Delete ${profile.name}?`)) return
-    setProfiles((all) => all.filter((_, i) => i !== bi))
-    setBankIdx(0)
-  }
+      closeDialog(); toast('Layout reset')
+    },
+  })
+  const addBank = () => setDialog({
+    type: 'prompt', title: 'Save as a new bank', label: 'Bank name', confirmLabel: 'Save bank',
+    onSubmit: (name) => {
+      setProfiles((all) => [...all, { ...JSON.parse(JSON.stringify(profile)), name }])
+      setBankIdx(profiles.length); closeDialog(); toast(`${name} added`)
+    },
+  })
+  const deleteBank = () => setDialog({
+    type: 'confirm', title: `Delete ${profile.name}?`, danger: true, confirmLabel: 'Delete bank',
+    message: 'The layout for this bank is removed. Your cheques are not affected.',
+    onConfirm: () => { setProfiles((all) => all.filter((_, i) => i !== bi)); setBankIdx(0); closeDialog(); toast('Bank deleted') },
+  })
+  const applyToAll = () => setDialog({
+    type: 'confirm', title: 'Use this layout for all banks?', confirmLabel: 'Copy to all banks',
+    message: `The positions, sizes and date settings of ${profile.name} are copied to every other bank. Their names stay the same.`,
+    onConfirm: () => {
+      setProfiles((all) => all.map((b, i) => (i === bi ? b : { ...JSON.parse(JSON.stringify(profile)), name: b.name })))
+      closeDialog(); toast('Layout copied to all banks')
+    },
+  })
+  const resetData = () => setDialog({
+    type: 'confirm', title: 'Erase all saved data?', danger: true, confirmLabel: 'Erase and restart',
+    message: 'This removes every cheque, bank layout and setting saved in this browser. It cannot be undone.',
+    onConfirm: () => {
+      try { Object.keys(localStorage).filter((k) => k.startsWith('cm')).forEach((k) => localStorage.removeItem(k)) } catch { /* ignore */ }
+      window.location.reload()
+    },
+  })
 
   /* ---- entries ---- */
   const takeNo = () => {
@@ -77,17 +111,15 @@ export default function App() {
     return no
   }
   const patchEntry = (p) => setEntries((all) => all.map((e, i) => (i === si ? { ...e, ...p } : e)))
-  const newEntry = () => {
+  const addEntry = () => {
     setEntries((all) => [...all, { ...blank(nextId(), takeNo()), date: entry.date }]) // same date as the current cheque
     setSel(entries.length)
+    toast('Cheque added')
   }
   const duplicateEntry = () => {
     setEntries((all) => [...all, { ...entry, id: nextId(), no: takeNo(), on: true }])
     setSel(entries.length)
-  }
-  const applyToAll = () => {
-    if (!window.confirm(`Copy the layout of ${profile.name} (positions, sizes, date settings) to ALL other banks?`)) return
-    setProfiles((all) => all.map((b, i) => (i === bi ? b : { ...JSON.parse(JSON.stringify(profile)), name: b.name })))
+    toast('Cheque duplicated')
   }
   const importRows = (rows) => {
     if (!rows.length) return
@@ -101,83 +133,75 @@ export default function App() {
     const starter = entries.length === 1 && !entries[0].payee
     setEntries(starter ? fresh : [...entries, ...fresh])
     setSel(starter ? 0 : entries.length)
+    closeDialog()
+    toast(`${fresh.length} ${fresh.length === 1 ? 'cheque' : 'cheques'} imported`)
   }
   const removeSel = () => {
     if (entries.length === 1) { patchEntry({ payee: '', amount: 0, memo: '' }); return }
     setEntries((all) => all.filter((_, i) => i !== si))
     setSel(Math.max(0, si - 1))
+    toast('Cheque deleted')
   }
-  const clearAll = () => {
-    if (!window.confirm('Remove every cheque from the list?')) return
-    setEntries([blank(1, settings.nextNo)])
-    setSel(0)
-  }
+  const clearAll = () => setDialog({
+    type: 'confirm', title: 'Clear all cheques?', danger: true, confirmLabel: 'Clear all',
+    message: `All ${entries.length} cheques are removed from the list. Bank layouts are kept.`,
+    onConfirm: () => { setEntries([blank(1, settings.nextNo)]); setSel(0); closeDialog(); toast('List cleared') },
+  })
 
   /* ---- printing ---- */
-  /** Ask before printing cheques that look unfinished (no payee or zero amount). */
-  const startPrint = (list) => {
-    if (!list.length) { window.alert('Tick at least one cheque to print.'); return }
-    const bad = list.filter((e) => !e.payee.trim() || !(Number(e.amount) > 0))
-    if (bad.length && !window.confirm(`${bad.length} of ${list.length} cheque(s) have no payee or a zero amount. Print anyway?`)) return
-    setJob({ entries: list })
-  }
-  const printTicked = () => startPrint(entries.filter((e) => e.on))
+  const ticked = entries.filter((e) => e.on)
+  const reviewPrint = (list) => { if (list.length) setDialog({ type: 'print', entries: list }) }
+  const confirmPrint = () => { setJob({ entries: dialog.entries }); closeDialog() }
   const onPrintDone = useCallback(() => setJob(null), [])
 
-  const nav = (
-    <>
-      <button onClick={() => setSel((si - 1 + entries.length) % entries.length)}>◀</button>
-      <button onClick={() => setSel((si + 1) % entries.length)}>▶</button>
-      <span className="hint">Cheque {si + 1} of {entries.length}</span>
-      <span className="grow" />
-      <button className={`lockbtn${locked ? ' on' : ''}`} onClick={() => setLocked(!locked)}>{locked ? '🔒 Locked' : '🔓 Unlocked'}</button>
-      <label className="inline"><input type="checkbox" checked={guides} onChange={(e) => setGuides(e.target.checked)} /> Show field boxes</label>
-    </>
-  )
+  // Ctrl + Enter anywhere adds the next cheque
+  useEffect(() => {
+    const onKey = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !dialog) { e.preventDefault(); addEntry() }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  })
 
   return (
     <>
       <div className="app">
-        <header>
-          <h1>Cheque Maker</h1>
-          <span className="hint">Fill in the details, pick the bank, print onto your pre-printed cheques.</span>
-          <span className="grow" />
-          <button className="pri" onClick={printTicked}>Print ticked cheques</button>
-        </header>
-        <main>
-          <section className="side">
-            <ChequeForm
-              entry={entry} patch={patchEntry} currency={settings.currency}
-              onNew={newEntry} onDuplicate={duplicateEntry} onPrintOne={() => startPrint([entry])} onCalibrate={() => setJob({ calibration: true })}
-            />
-            <ChequeList
-              entries={entries} sel={si} setSel={setSel}
-              toggle={(i) => setEntries((all) => all.map((e, j) => (j === i ? { ...e, on: !e.on } : e)))}
-              setAll={(on) => setEntries((all) => all.map((e) => ({ ...e, on })))}
-              remove={removeSel} importRows={importRows} clearAll={clearAll}
-              nextNo={settings.nextNo} setNextNo={(v) => patchSettings({ nextNo: v })}
-            />
-            <BankPanel
-              profiles={profiles} bankIdx={bi} setBankIdx={setBankIdx} profile={profile}
-              patchProfile={patchProfile} resetBank={resetBank} addBank={addBank} deleteBank={deleteBank} applyToAll={applyToAll}
-            />
-            <FieldsPanel
-              locked={locked} setLocked={setLocked}
-              profile={profile} activeField={activeField} setActiveField={setActiveField} patchField={patchField}
-            />
-            <DatePanel profile={profile} locked={locked} patchField={patchField} patchProfile={patchProfile} />
-            <AmountPanel settings={settings} patchSettings={patchSettings} />
-            <BackgroundPanel bg={bg} setBg={setBg} opacity={bgOpacity} setOpacity={setBgOpacity} />
-          </section>
-          <section>
-            <Preview
-              entry={entry} profile={profile} settings={settings} locked={locked} activeField={activeField}
-              setActiveField={setActiveField} patchField={patchField} bg={bg} bgOpacity={bgOpacity}
-              guides={guides} nav={nav}
-            />
-          </section>
-        </main>
+        <TopBar
+          profiles={profiles} bankIdx={bi} setBankIdx={setBankIdx} profile={profile}
+          tickedCount={ticked.length} onPrint={() => reviewPrint(ticked)}
+        />
+        <div className="shell">
+          <Queue
+            entries={entries} sel={si} setSel={setSel}
+            toggle={(i) => setEntries((all) => all.map((e, j) => (j === i ? { ...e, on: !e.on } : e)))}
+            setAll={(on) => setEntries((all) => all.map((e) => ({ ...e, on })))}
+            onAdd={addEntry} onImport={() => setDialog({ type: 'import' })} onRemove={removeSel} onClear={clearAll}
+          />
+          <Workspace
+            entry={entry} profile={profile} settings={settings} locked={locked} setLocked={setLocked}
+            activeField={activeField} setActiveField={setActiveField} patchField={patchField}
+            bg={bg} bgOpacity={bgOpacity} guides={guides} setGuides={setGuides}
+            pos={si + 1} count={entries.length}
+            onPrev={() => setSel((si - 1 + entries.length) % entries.length)}
+            onNext={() => setSel((si + 1) % entries.length)}
+          />
+          <Inspector
+            entry={entry} patch={patchEntry} currency={settings.currency} onAdd={addEntry} onDuplicate={duplicateEntry}
+            profile={profile} patchProfile={patchProfile} locked={locked} setLocked={setLocked}
+            activeField={activeField} setActiveField={setActiveField} patchField={patchField}
+            bg={bg} setBg={setBg} bgOpacity={bgOpacity} setBgOpacity={setBgOpacity}
+            onCalibrate={() => setJob({ calibration: true })}
+            onReset={resetBank} onCopyBank={addBank} onApplyAll={applyToAll} onDeleteBank={deleteBank} canDelete={profiles.length > 1}
+            settings={settings} patchSettings={patchSettings} onResetData={resetData}
+          />
+        </div>
       </div>
+
+      {dialog?.type === 'confirm' && <ConfirmDialog {...dialog} onCancel={closeDialog} />}
+      {dialog?.type === 'prompt' && <PromptDialog {...dialog} onCancel={closeDialog} />}
+      {dialog?.type === 'import' && <ImportDialog onImport={importRows} onClose={closeDialog} />}
+      {dialog?.type === 'print' && <PrintDialog entries={dialog.entries} profile={profile} onPrint={confirmPrint} onClose={closeDialog} />}
+      <Toasts items={toasts} />
       <PrintSheet job={job} profile={profile} settings={settings} onDone={onPrintDone} />
     </>
   )
