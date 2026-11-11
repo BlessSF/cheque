@@ -3,6 +3,7 @@ import ChequeView from './ChequeView.jsx'
 import { Switch } from './ui.jsx'
 import { IconChevronLeft, IconChevronRight, IconLock, IconUnlock } from './icons.jsx'
 import { pageSize } from '../lib/layout.js'
+import { COPYRIGHT } from '../lib/credit.js'
 
 const MM_100 = 96 / 25.4 // px per mm at 100% (true size on a 96 dpi screen)
 const ZOOMS = ['fit', 75, 100, 125, 150, 200]
@@ -168,6 +169,7 @@ export default function Workspace({
           {f ? <><b>{f.label}</b> at X {f.x}  Y {f.y} mm</> : 'No field selected'}
         </span>
         <span className="cell grow" />
+        <span className="cell credit-cell">{COPYRIGHT}</span>
         <span className="cell">{locked ? 'Positions locked' : 'Drag a field, or use the arrow keys (Shift 0.1 mm, Alt 5 mm)'}</span>
       </div>
     </section>

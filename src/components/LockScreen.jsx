@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Mark } from './icons.jsx'
 import { MIN_LEN } from '../lib/passcode.js'
+import { AUTHOR } from '../lib/credit.js'
 
 /** Full-screen gate. mode: 'unlock' (enter passcode) | 'setup' (choose one). */
 export default function LockScreen({ mode, site, onUnlock, onSetup, onSkip, onForgot }) {
@@ -81,6 +82,7 @@ export default function LockScreen({ mode, site, onUnlock, onSetup, onSkip, onFo
               : <button type="button" className="link-btn lock-foot" onClick={() => setSure(true)}>Forgot your passcode?</button>
         )}
       </form>
+      <p className="credit">Made by {AUTHOR}</p>
     </main>
   )
 }
