@@ -296,3 +296,21 @@ input[type=file] { font-size: 12.5px; }
 
 /* Preview-only cheque outline: sits behind fields, never captures the pointer */
 .shadow-cheque { position: absolute; left: 0; top: 0; pointer-events: none; display: block; }
+
+/* ------------------------------------------------------------- passcode */
+.lock { min-height: 100%; display: grid; place-items: center; padding: 24px; background: var(--desk); }
+.lock-card {
+  width: min(380px, 100%); display: flex; flex-direction: column; gap: 14px; padding: 28px 28px 24px;
+  background: var(--paper); border-radius: 6px; box-shadow: 0 0 0 1px rgba(22, 36, 58, .14), 0 24px 60px -16px rgba(22, 36, 58, .35);
+}
+.lock-brand { display: flex; align-items: center; gap: 10px; font-size: 15px; font-weight: 700; letter-spacing: -.01em; }
+.lock-card h1 { font-size: 22px; line-height: 1.2; font-weight: 700; letter-spacing: -.015em; margin-top: 6px; }
+.lock-sub { color: var(--ink-2); font-size: 13.5px; margin-top: -8px; }
+.lock-card input[type=password] { height: 40px; font-size: 16px; }
+.lock-err { min-height: 18px; margin: -4px 0; font-size: 12.5px; color: var(--danger); }
+.lock-foot { margin-top: 2px; }
+.link-btn { align-self: flex-start; padding: 0; border: 0; background: none; color: var(--ink-2); font-size: 12.5px; text-decoration: underline; cursor: pointer; }
+.link-btn:hover { color: var(--ink); }
+.err-text { color: var(--danger); }
+.ok-text { color: var(--ok); }
+.stack.tight { gap: 10px; }

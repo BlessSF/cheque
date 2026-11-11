@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ColorField, Field, NumberBox, NumInput, Switch, Tabs } from './ui.jsx'
 import { IconCopy, IconPlus, IconPrint, IconWarn } from './icons.jsx'
 import { amountWords } from '../lib/words.js'
+import PasscodeGroup from './PasscodeGroup.jsx'
 
 const round1 = (v) => Math.round(v * 10) / 10
 const FONTS = ['Arial', 'Calibri', 'Courier New', 'Times New Roman', 'Verdana']
@@ -273,7 +274,7 @@ function DateTab({ profile, locked, patchField, patchProfile }) {
 }
 
 /* ----------------------------------------------------------------- Options */
-function OptionsTab({ settings, patchSettings, onResetData }) {
+function OptionsTab({ settings, patchSettings, onResetData, security }) {
   return (
     <div className="stack">
       <section className="group">
@@ -289,6 +290,7 @@ function OptionsTab({ settings, patchSettings, onResetData }) {
           <input type="text" value={settings.nextNo} onChange={(e) => patchSettings({ nextNo: e.target.value })} />
         </Field>
       </section>
+      {security && <PasscodeGroup security={security} />}
       <section className="group">
         <h3>Saved data</h3>
         <p className="help">Cheques, layouts and settings are saved in this browser on this computer only.</p>

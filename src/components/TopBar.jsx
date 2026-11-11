@@ -1,7 +1,7 @@
-import { Mark, IconPrint, IconCopy } from './icons.jsx'
+import { Mark, IconPrint, IconCopy, IconLock } from './icons.jsx'
 import { pageSize } from '../lib/layout.js'
 
-export default function TopBar({ profiles, bankIdx, setBankIdx, profile, tickedCount, onPrint, onApplyAll, linked }) {
+export default function TopBar({ profiles, bankIdx, setBankIdx, profile, tickedCount, onPrint, onApplyAll, linked, onLock }) {
   const [W, H] = pageSize(profile)
   return (
     <header className="topbar">
@@ -25,6 +25,11 @@ export default function TopBar({ profiles, bankIdx, setBankIdx, profile, tickedC
       )}
       <span className="page-chip">{profile.mode === 'a4' ? 'A4 landscape' : 'Custom'} · {W} × {H} mm</span>
       <span className="grow" />
+      {onLock && (
+        <button className="btn" onClick={onLock} title="Lock Cheque Maker (asks for the passcode again)">
+          <IconLock /> <span className="btn-text">Lock</span>
+        </button>
+      )}
       <button className="btn primary lg" onClick={onPrint} disabled={!tickedCount}>
         <IconPrint /> Print {tickedCount} {tickedCount === 1 ? 'cheque' : 'cheques'}
       </button>

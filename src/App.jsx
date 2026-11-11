@@ -22,7 +22,7 @@ function loadProfiles() {
 
 const blank = (id, no) => ({ id, payee: '', amount: 0, date: todayISO(), memo: '', no, on: true })
 
-export default function App() {
+export default function App({ security }) {
   const [profiles, setProfiles] = useLocalStorage('cm5_profiles', loadProfiles)
   // Self-heal: whatever is saved (older version, half-updated files) is brought up to date once at start.
   // migrateProfile is safe to run repeatedly: it keeps positions and only adds what is missing.
@@ -179,6 +179,7 @@ export default function App() {
         <TopBar
           profiles={profiles} bankIdx={bi} setBankIdx={setBankIdx} profile={profile}
           tickedCount={ticked.length} onPrint={() => reviewPrint(ticked)} onApplyAll={applyToAll} linked={linked}
+          onLock={security?.enabled ? security.lockNow : null}
         />
         <div className="shell">
           <Queue
@@ -202,7 +203,7 @@ export default function App() {
             bg={bg} setBg={setBg} bgOpacity={bgOpacity} setBgOpacity={setBgOpacity}
             onCalibrate={() => setJob({ calibration: true })}
             onReset={resetBank} onCopyBank={addBank} onApplyAll={applyToAll} linked={linked} onToggleLink={toggleLink} onDeleteBank={deleteBank} canDelete={profiles.length > 1}
-            settings={settings} patchSettings={patchSettings} onResetData={resetData}
+            settings={settings} patchSettings={patchSettings} onResetData={resetData} security={security}
           />
         </div>
       </div>
@@ -215,4 +216,4 @@ export default function App() {
       <PrintSheet job={job} profile={profile} settings={settings} onDone={onPrintDone} />
     </>
   )
-}
+} 
