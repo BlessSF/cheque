@@ -36,6 +36,7 @@ export default function ChequeView({
               fontFamily: `${f.font}, Arial, sans-serif`,
               fontSize: f.size * PT_TO_MM * unit,
               letterSpacing: (f.ls || 0) * unit,
+              color: f.color || '#000000',
             }}
           >
             {fieldText(key, entry, profile, settings)}

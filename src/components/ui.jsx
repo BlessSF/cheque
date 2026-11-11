@@ -115,3 +115,36 @@ export function Toasts({ items }) {
     </div>
   )
 }
+
+export const PRINT_COLORS = [
+  { value: '#000000', name: 'Pure black' },
+  { value: '#222222', name: 'Soft black' },
+  { value: '#4A4A4A', name: 'Dark grey' },
+  { value: '#16243A', name: 'Blue-black ink' },
+  { value: '#1F3A93', name: 'Pen blue' },
+]
+
+/** Swatches for the usual print colours, plus a custom colour. */
+export function ColorField({ label, value, onChange, hint }) {
+  const v = (value || '#000000').toLowerCase()
+  const preset = PRINT_COLORS.find((c) => c.value.toLowerCase() === v)
+  return (
+    <div className="field">
+      {label && <span className="field-label">{label}</span>}
+      <div className="swatches" role="group" aria-label={label || 'Text colour'}>
+        {PRINT_COLORS.map((c) => (
+          <button
+            key={c.value} type="button" className={`swatch${preset?.value === c.value ? ' on' : ''}`}
+            style={{ background: c.value }} title={c.name} aria-label={c.name} aria-pressed={preset?.value === c.value}
+            onClick={() => onChange(c.value)}
+          />
+        ))}
+        <label className={`swatch custom${preset ? '' : ' on'}`} title="Custom colour" style={preset ? undefined : { background: v }}>
+          <input type="color" value={v} onChange={(e) => onChange(e.target.value)} aria-label="Custom colour" />
+        </label>
+        <span className="swatch-name">{preset ? preset.name : `Custom ${v.toUpperCase()}`}</span>
+      </div>
+      {hint && <span className="field-hint">{hint}</span>}
+    </div>
+  )
+}

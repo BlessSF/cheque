@@ -282,3 +282,11 @@ input[type=file] { font-size: 12.5px; }
 .fieldlist li input.coord { width: 62px; height: 28px; padding: 0 8px; text-align: right; font-size: 12.5px; flex: none; }
 .fieldlist li input.coord:disabled { background: transparent; border-color: transparent; color: var(--ink-3); cursor: not-allowed; }
 .fieldlist li .fieldname { min-width: 0; }
+
+.swatches { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.swatch { width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(22, 36, 58, .25); padding: 0; cursor: pointer; flex: none; position: relative; display: inline-block; }
+.swatch:hover { transform: scale(1.08); }
+.swatch.on { box-shadow: 0 0 0 2px var(--paper), 0 0 0 4px var(--ink); }
+.swatch.custom { background: conic-gradient(#e5484d, #f5a623, #f4e04d, #4caf50, #1fa2d4, #5b5bd6, #c156c4, #e5484d); overflow: hidden; }
+.swatch.custom input { position: absolute; inset: -6px; width: 36px; height: 36px; opacity: 0; cursor: pointer; }
+.swatch-name { font-size: 12.5px; color: var(--ink-2); margin-left: 2px; }

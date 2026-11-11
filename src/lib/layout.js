@@ -11,15 +11,15 @@ import { amountWords, fmtMoney } from './words.js'
 export const A4 = [297, 210]
 
 export const baseFields = () => ({
-  payee:   { label: 'Payee',           x: 36.1,  y: 90.55, w: 100,  size: 10, align: 'left',   ls: 0, font: 'Arial',   on: true },
-  amount:  { label: 'Amount (number)', x: 145.1, y: 89.9,  w: 27.8, size: 11, align: 'center', ls: 0, font: 'Arial',   on: true },
-  words:   { label: 'Amount in words', x: 36.1,  y: 97.5,  w: 170,  size: 12, align: 'left',   ls: 0, font: 'Calibri', on: true },
-  day:     { label: 'Date: Day',       x: 190.9, y: 90.5,  w: 10,   size: 10, align: 'center', ls: 0, font: 'Arial',   on: true },
-  month:   { label: 'Date: Month',     x: 203,   y: 90.5,  w: 10,   size: 10, align: 'center', ls: 0, font: 'Arial',   on: true },
-  year:    { label: 'Date: Year',      x: 215,   y: 90.5,  w: 16,   size: 10, align: 'center', ls: 0, font: 'Arial',   on: true },
-  memo:    { label: 'Memo',            x: 36.1,  y: 110,   w: 90,   size: 9,  align: 'left',   ls: 0, font: 'Arial',   on: false },
-  no:      { label: 'Cheque no.',      x: 190.9, y: 80,    w: 40,   size: 9,  align: 'left',   ls: 0, font: 'Arial',   on: false },
-  crossed: { label: 'A/C PAYEE ONLY',  x: 36.1,  y: 78,    w: 60,   size: 9,  align: 'left',   ls: 0, font: 'Arial',   on: false },
+  payee:   { label: 'Payee',           x: 36.1,  y: 90.55, w: 100,  size: 10, align: 'left',   ls: 0, font: 'Arial',   color: '#000000', on: true },
+  amount:  { label: 'Amount (number)', x: 145.1, y: 89.9,  w: 27.8, size: 11, align: 'center', ls: 0, font: 'Arial',   color: '#000000', on: true },
+  words:   { label: 'Amount in words', x: 36.1,  y: 97.5,  w: 170,  size: 12, align: 'left',   ls: 0, font: 'Calibri', color: '#000000', on: true },
+  day:     { label: 'Date: Day',       x: 190.9, y: 90.5,  w: 10,   size: 10, align: 'center', ls: 0, font: 'Arial',   color: '#000000', on: true },
+  month:   { label: 'Date: Month',     x: 203,   y: 90.5,  w: 10,   size: 10, align: 'center', ls: 0, font: 'Arial',   color: '#000000', on: true },
+  year:    { label: 'Date: Year',      x: 215,   y: 90.5,  w: 16,   size: 10, align: 'center', ls: 0, font: 'Arial',   color: '#000000', on: true },
+  memo:    { label: 'Memo',            x: 36.1,  y: 110,   w: 90,   size: 9,  align: 'left',   ls: 0, font: 'Arial',   color: '#000000', on: false },
+  no:      { label: 'Cheque no.',      x: 190.9, y: 80,    w: 40,   size: 9,  align: 'left',   ls: 0, font: 'Arial',   color: '#000000', on: false },
+  crossed: { label: 'A/C PAYEE ONLY',  x: 36.1,  y: 78,    w: 60,   size: 9,  align: 'left',   ls: 0, font: 'Arial',   color: '#000000', on: false },
 })
 
 export const DEFAULT_BANKS = [
@@ -85,7 +85,7 @@ export function migrateProfile(b) {
   const d = old.date
   const fields = {}
   Object.keys(base).forEach((key, i) => {
-    if (old[key]) { fields[key] = old[key]; return }
+    if (old[key]) { fields[key] = { color: '#000000', ...old[key] }; return } // saved layouts get the default print colour
     if (d && (key === 'day' || key === 'month' || key === 'year')) {
       const off = { day: 0, month: 12, year: 24 }[key]
       fields[key] = { ...base[key], x: d.x + off, y: d.y, size: d.size, font: d.font, on: true }

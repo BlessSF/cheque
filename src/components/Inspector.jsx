@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Field, NumberBox, NumInput, Switch, Tabs } from './ui.jsx'
+import { ColorField, Field, NumberBox, NumInput, Switch, Tabs } from './ui.jsx'
 import { IconCopy, IconPlus, IconPrint, IconWarn } from './icons.jsx'
 import { amountWords } from '../lib/words.js'
 
@@ -157,6 +157,10 @@ function LayoutTab({
                 {FONTS.map((x) => <option key={x}>{x}</option>)}
               </select>
             </Field>
+            <ColorField label="Text colour" value={f.color} onChange={(c) => patchField(activeField, { color: c })} />
+            <button className="btn sm" onClick={() => Object.keys(profile.fields).forEach((k) => patchField(k, { color: f.color || '#000000' }))}>
+              Use this colour for all fields
+            </button>
             {locked && <p className="help">Positions are locked. Turn off Lock positions to move this field.</p>}
           </div>
         )}
@@ -217,6 +221,7 @@ function DateTab({ profile, locked, patchField, patchProfile }) {
           <NumInput label="Font size" unit="pt" value={month.size} onChange={(v) => all({ size: v })} />
         </div>
         <p className="help">Use a letter gap when the cheque has a separate box for every digit.</p>
+        <ColorField label="Text colour" value={month.color} onChange={(c) => all({ color: c })} />
       </section>
       <section className="group">
         <h3>Style</h3>
