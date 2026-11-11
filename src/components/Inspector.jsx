@@ -78,6 +78,7 @@ function LayoutTab({
   bg, setBg, bgOpacity, setBgOpacity, onCalibrate, onReset, onCopyBank, onApplyAll, onDeleteBank, canDelete, linked, onToggleLink,
 }) {
   const f = profile.fields[activeField]
+  const setShadow = (p) => patchProfile({ shadow: { ...profile.shadow, ...p } })
   const onFile = (e) => {
     const file = e.target.files[0]
     if (!file) return
@@ -118,6 +119,24 @@ function LayoutTab({
         </div>
         <p className="help">The offset shifts everything on paper by the same amount, so one printer's feed error doesn't mean moving each field.</p>
         <button className="btn" onClick={onCalibrate}><IconPrint /> Print test page</button>
+      </section>
+
+      <section className="group">
+        <div className="group-head">
+          <h3>Cheque outline</h3>
+          <Switch checked={!!profile.shadow?.on} onChange={(v) => setShadow({ on: v })} label="Show" />
+        </div>
+        {profile.shadow?.on && (
+          <>
+            <div className="two">
+              <NumInput label="Left" unit="mm" value={profile.shadow.x} onChange={(v) => setShadow({ x: v })} />
+              <NumInput label="Top" unit="mm" value={profile.shadow.y} onChange={(v) => setShadow({ y: v })} />
+              <NumInput label="Width" unit="mm" value={profile.shadow.w} onChange={(v) => setShadow({ w: v })} />
+              <NumInput label="Height" unit="mm" value={profile.shadow.h} onChange={(v) => setShadow({ h: v })} />
+            </div>
+            <p className="help">A faint cheque drawn behind the fields so the preview reads like a cheque. Set the size of your real cheque. It is for orientation only and is never printed.</p>
+          </>
+        )}
       </section>
 
       <section className="group">

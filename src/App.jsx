@@ -189,7 +189,7 @@ export default function App() {
           />
           <Workspace
             entry={entry} profile={profile} settings={settings} locked={locked} setLocked={setLocked}
-            activeField={activeField} setActiveField={setActiveField} patchField={patchField}
+            activeField={activeField} setActiveField={setActiveField} patchField={patchField} patchProfile={patchProfile}
             bg={bg} bgOpacity={bgOpacity} guides={guides} setGuides={setGuides}
             pos={si + 1} count={entries.length}
             onPrev={() => setSel((si - 1 + entries.length) % entries.length)}

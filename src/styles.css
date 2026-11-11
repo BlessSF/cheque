@@ -293,3 +293,6 @@ input[type=file] { font-size: 12.5px; }
 
 .linked-chip { font-size: 12px; font-weight: 600; color: #1D5538; background: #E4F1EA; border: 1px solid #A9CDB8; border-radius: 12px; padding: 3px 10px; white-space: nowrap; }
 @media (max-width: 900px) { .btn-text { display: none; } }
+
+/* Preview-only cheque outline: sits behind fields, never captures the pointer */
+.shadow-cheque { position: absolute; left: 0; top: 0; pointer-events: none; display: block; }

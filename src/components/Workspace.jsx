@@ -44,7 +44,7 @@ function Ruler({ axis, mm, unit, markerRef }) {
 }
 
 export default function Workspace({
-  entry, profile, settings, locked, setLocked, activeField, setActiveField, patchField,
+  entry, profile, settings, locked, setLocked, activeField, setActiveField, patchField, patchProfile,
   bg, bgOpacity, guides, setGuides, pos, count, onPrev, onNext,
 }) {
   const [W, H] = pageSize(profile)
@@ -131,6 +131,7 @@ export default function Workspace({
           <button className="icon-btn" onClick={onNext} aria-label="Next cheque"><IconChevronRight /></button>
         </div>
         <span className="grow" />
+        <Switch checked={!!profile.shadow?.on} onChange={(v) => patchProfile({ shadow: { ...profile.shadow, on: v } })} label="Cheque outline" />
         <Switch checked={guides} onChange={setGuides} label="Field boxes" />
         <label className="zoom">
           <span className="visually-hidden">Zoom</span>

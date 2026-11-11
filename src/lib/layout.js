@@ -22,12 +22,15 @@ export const baseFields = () => ({
   crossed: { label: 'A/C PAYEE ONLY',  x: 36.1,  y: 78,    w: 60,   size: 9,  align: 'left',   ls: 0, font: 'Arial',   color: '#000000', on: false },
 })
 
+/** The faint cheque shape behind the fields (preview only). Millimetres on the page. */
+export const defaultShadow = () => ({ on: true, x: 14, y: 66, w: 236, h: 76 })
+
 export const DEFAULT_BANKS = [
   'Security Bank', 'Metrobank', 'BDO', 'BPI', 'PNB', 'UnionBank', 'Landbank', 'RCBC',
 ]
 
 export const newProfile = (name) => ({
-  name, mode: 'a4', pw: 297, ph: 210, nx: 0, ny: 0, mfmt: 'num', yfmt: '4', locked: true, fields: baseFields(),
+  name, mode: 'a4', pw: 297, ph: 210, nx: 0, ny: 0, mfmt: 'num', yfmt: '4', locked: true, shadow: defaultShadow(), fields: baseFields(),
 })
 
 export const pageSize = (p) =>
@@ -94,5 +97,5 @@ export function migrateProfile(b) {
     }
   })
   const { dfmt, ...rest } = b
-  return { mfmt: 'num', yfmt: '4', locked: true, ...rest, fields }
+  return { mfmt: 'num', yfmt: '4', locked: true, shadow: defaultShadow(), ...rest, fields }
 }
