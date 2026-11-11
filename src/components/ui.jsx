@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { IconClose } from './icons.jsx'
 
 /** Label above a control, with an optional hint line below it. */
@@ -12,15 +12,42 @@ export function Field({ label, hint, children, className = '' }) {
   )
 }
 
+/**
+ * A number box you can type in freely: clear it, retype it, use decimals. The value is applied as soon as the
+ * text is a valid number. Arrow Up / Down step it (Shift 0.1, Alt 5). Enter or leaving the box tidies it up.
+ */
+export function NumberBox({ value, onChange, step = 0.5, disabled, className, ...rest }) {
+  const [draft, setDraft] = useState(null)
+  const text = draft ?? String(value)
+  const apply = (t) => { const n = Number(t); if (t.trim() !== '' && Number.isFinite(n)) onChange(n) }
+  return (
+    <input
+      {...rest} type="text" inputMode="decimal" autoComplete="off" className={className} value={text} disabled={disabled}
+      onFocus={(e) => e.target.select()}
+      onChange={(e) => {
+        const t = e.target.value
+        if (/^-?\d*\.?\d*$/.test(t)) { setDraft(t); apply(t) }
+      }}
+      onBlur={() => setDraft(null)}
+      onKeyDown={(e) => {
+        if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+          e.preventDefault()
+          const st = e.shiftKey ? 0.1 : e.altKey ? 5 : step
+          const base = Number(draft ?? value) || 0
+          setDraft(null)
+          onChange(Math.round((base + (e.key === 'ArrowUp' ? st : -st)) * 100) / 100)
+        } else if (e.key === 'Enter') e.currentTarget.blur()
+      }}
+    />
+  )
+}
+
 /** Number input with a unit suffix. Greyed out when `disabled`. */
-export function NumInput({ label, value, onChange, step = 0.5, unit, disabled, min, hint }) {
+export function NumInput({ label, value, onChange, step = 0.5, unit, disabled, hint }) {
   return (
     <Field label={label} hint={hint}>
       <span className={`num${disabled ? ' is-disabled' : ''}`}>
-        <input
-          type="number" inputMode="decimal" step={step} min={min} value={value} disabled={disabled}
-          onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-        />
+        <NumberBox value={value} onChange={onChange} step={step} disabled={disabled} />
         {unit && <span className="unit">{unit}</span>}
       </span>
     </Field>

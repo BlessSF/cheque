@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Field, NumInput, Switch, Tabs } from './ui.jsx'
+import { Field, NumberBox, NumInput, Switch, Tabs } from './ui.jsx'
 import { IconCopy, IconPlus, IconPrint, IconWarn } from './icons.jsx'
 import { amountWords } from '../lib/words.js'
 
@@ -115,14 +115,27 @@ function LayoutTab({
           <Switch checked={locked} onChange={setLocked} label="Lock positions" />
         </div>
         <ul className="fieldlist">
+          <li className="head" aria-hidden="true"><span>Field</span><span>Across</span><span>Down</span></li>
           {Object.entries(profile.fields).map(([k, fld]) => (
             <li key={k} className={k === activeField ? 'on' : ''}>
               <Switch checked={fld.on} onChange={(v) => patchField(k, { on: v })} label={<span className="visually-hidden">Show {fld.label}</span>} />
               <button className="fieldname" onClick={() => setActiveField(k)}>{fld.label}</button>
-              <span className="fieldpos">{fld.x}, {fld.y}</span>
+              <NumberBox
+                className="coord" aria-label={`${fld.label}, across in mm`} value={fld.x} disabled={locked}
+                onFocus={() => setActiveField(k)} onChange={(v) => patchField(k, { x: v })}
+              />
+              <NumberBox
+                className="coord" aria-label={`${fld.label}, down in mm`} value={fld.y} disabled={locked}
+                onFocus={() => setActiveField(k)} onChange={(v) => patchField(k, { y: v })}
+              />
             </li>
           ))}
         </ul>
+        <p className="help">
+          {locked
+            ? 'Positions are locked. Turn off Lock positions to type or drag them. Numbers are millimetres from the top-left corner of the page.'
+            : 'Type a number, or press the up and down arrow keys to step it (Shift 0.1 mm, Alt 5 mm). Numbers are millimetres from the top-left corner of the page.'}
+        </p>
 
         {f && (
           <div className="editor">
