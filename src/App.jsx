@@ -28,7 +28,7 @@ export default function App() {
   // migrateProfile is safe to run repeatedly: it keeps positions and only adds what is missing.
   useEffect(() => { setProfiles((all) => all.map(migrateProfile)) }, [setProfiles])
   const [bankIdx, setBankIdx] = useLocalStorage('cm3_bank', 0)
-  const [settings, setSettings] = useLocalStorage('cm3_settings', { stars: false, currency: 'Pesos', nextNo: '6941334602' })
+  const [settings, setSettings] = useLocalStorage('cm3_settings', { stars: false, currency: 'Pesos', nextNo: '6941334602', linkBanks: false })
   const [entries, setEntries] = useLocalStorage('cm3_entries', () => [
     { id: 1, payee: 'CARE 4 LIFE TRADING CORP.', amount: 10000, date: todayISO(), memo: '', no: '6941334601', on: true },
   ])
@@ -57,21 +57,24 @@ export default function App() {
 
   /* ---- profile / fields ---- */
   const locked = profile.locked !== false // saved per bank; locked unless explicitly unlocked
-  const patchProfile = (p) => setProfiles((all) => all.map((b, i) => (i === bi ? { ...b, ...p } : b)))
+  const linked = !!settings.linkBanks // "keep all banks the same": every layout change goes to every bank
+  const patchProfile = (p) => setProfiles((all) => all.map((b, i) => (linked || i === bi ? { ...b, ...p } : b)))
   const setLocked = (v) => { patchProfile({ locked: v }); toast(v ? 'Layout locked' : 'Layout unlocked') }
   const patchField = (key, p) => {
     // safety net: while locked, position and width can never change
     if (locked) { const { x, y, w, ...rest } = p; p = rest }
     if (!Object.keys(p).length) return
-    setProfiles((all) => all.map((b, i) => (i === bi ? { ...b, fields: { ...b.fields, [key]: { ...b.fields[key], ...p } } } : b)))
+    setProfiles((all) => all.map((b, i) => (linked || i === bi ? { ...b, fields: { ...b.fields, [key]: { ...b.fields[key], ...p } } } : b)))
   }
   const patchSettings = (p) => setSettings((s) => ({ ...s, ...p }))
 
   const resetBank = () => setDialog({
-    type: 'confirm', title: `Reset ${profile.name}?`, danger: true, confirmLabel: 'Reset layout',
-    message: 'Every field on this bank goes back to the positions from your Excel template. Other banks are not changed.',
+    type: 'confirm', title: linked ? 'Reset all banks?' : `Reset ${profile.name}?`, danger: true, confirmLabel: 'Reset layout',
+    message: linked
+      ? 'All banks are kept the same, so every bank goes back to the positions from your Excel template.'
+      : 'Every field on this bank goes back to the positions from your Excel template. Other banks are not changed.',
     onConfirm: () => {
-      setProfiles((all) => all.map((b, i) => (i === bi ? newProfile(b.name) : b)))
+      setProfiles((all) => all.map((b, i) => (linked || i === bi ? newProfile(b.name) : b)))
       closeDialog(); toast('Layout reset')
     },
   })
@@ -87,14 +90,21 @@ export default function App() {
     message: 'The layout for this bank is removed. Your cheques are not affected.',
     onConfirm: () => { setProfiles((all) => all.filter((_, i) => i !== bi)); setBankIdx(0); closeDialog(); toast('Bank deleted') },
   })
+  const copyLayoutToAll = () =>
+    setProfiles((all) => all.map((b, i) => (i === bi ? b : { ...JSON.parse(JSON.stringify(profile)), name: b.name })))
   const applyToAll = () => setDialog({
-    type: 'confirm', title: 'Use this layout for all banks?', confirmLabel: 'Copy to all banks',
-    message: `The positions, sizes and date settings of ${profile.name} are copied to every other bank. Their names stay the same.`,
-    onConfirm: () => {
-      setProfiles((all) => all.map((b, i) => (i === bi ? b : { ...JSON.parse(JSON.stringify(profile)), name: b.name })))
-      closeDialog(); toast('Layout copied to all banks')
-    },
+    type: 'confirm', title: 'Use this layout for all banks?', confirmLabel: 'Apply to all banks',
+    message: `The positions, sizes, colours and date settings of ${profile.name} are copied to all ${profiles.length - 1} other banks. Their names stay the same.`,
+    onConfirm: () => { copyLayoutToAll(); closeDialog(); toast('Layout applied to all banks') },
   })
+  const toggleLink = (on) => {
+    if (!on) { patchSettings({ linkBanks: false }); toast('Banks can differ again'); return }
+    setDialog({
+      type: 'confirm', title: 'Keep all banks the same?', confirmLabel: 'Keep the same',
+      message: `All banks are set to match ${profile.name} now. From then on, any change to positions, sizes, colours or date settings is applied to every bank.`,
+      onConfirm: () => { copyLayoutToAll(); patchSettings({ linkBanks: true }); closeDialog(); toast('All banks now match') },
+    })
+  }
   const resetData = () => setDialog({
     type: 'confirm', title: 'Erase all saved data?', danger: true, confirmLabel: 'Erase and restart',
     message: 'This removes every cheque, bank layout and setting saved in this browser. It cannot be undone.',
@@ -168,7 +178,7 @@ export default function App() {
       <div className="app">
         <TopBar
           profiles={profiles} bankIdx={bi} setBankIdx={setBankIdx} profile={profile}
-          tickedCount={ticked.length} onPrint={() => reviewPrint(ticked)}
+          tickedCount={ticked.length} onPrint={() => reviewPrint(ticked)} onApplyAll={applyToAll} linked={linked}
         />
         <div className="shell">
           <Queue
@@ -191,7 +201,7 @@ export default function App() {
             activeField={activeField} setActiveField={setActiveField} patchField={patchField}
             bg={bg} setBg={setBg} bgOpacity={bgOpacity} setBgOpacity={setBgOpacity}
             onCalibrate={() => setJob({ calibration: true })}
-            onReset={resetBank} onCopyBank={addBank} onApplyAll={applyToAll} onDeleteBank={deleteBank} canDelete={profiles.length > 1}
+            onReset={resetBank} onCopyBank={addBank} onApplyAll={applyToAll} linked={linked} onToggleLink={toggleLink} onDeleteBank={deleteBank} canDelete={profiles.length > 1}
             settings={settings} patchSettings={patchSettings} onResetData={resetData}
           />
         </div>

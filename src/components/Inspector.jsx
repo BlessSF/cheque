@@ -75,7 +75,7 @@ function ChequeTab({ entry, patch, currency, onAdd, onDuplicate, profile, patchF
 /* ------------------------------------------------------------------ Layout */
 function LayoutTab({
   profile, patchProfile, locked, setLocked, activeField, setActiveField, patchField,
-  bg, setBg, bgOpacity, setBgOpacity, onCalibrate, onReset, onCopyBank, onApplyAll, onDeleteBank, canDelete,
+  bg, setBg, bgOpacity, setBgOpacity, onCalibrate, onReset, onCopyBank, onApplyAll, onDeleteBank, canDelete, linked, onToggleLink,
 }) {
   const f = profile.fields[activeField]
   const onFile = (e) => {
@@ -87,6 +87,17 @@ function LayoutTab({
   }
   return (
     <div className="stack">
+      <section className="group">
+        <h3>All banks</h3>
+        <Switch checked={linked} onChange={onToggleLink} label="Keep all banks the same" />
+        <p className="help">
+          {linked
+            ? 'On. Every change to positions, sizes, colours or date settings is applied to all banks.'
+            : 'Off. Each bank has its own layout. Turn this on to set the layout once for every bank, or copy it just once:'}
+        </p>
+        {!linked && <button className="btn" onClick={onApplyAll}>Apply this layout to all banks</button>}
+      </section>
+
       <section className="group">
         <h3>Paper</h3>
         <Field label="Page size">
@@ -181,7 +192,6 @@ function LayoutTab({
       <section className="group">
         <h3>{profile.name} layout</h3>
         <div className="btn-col">
-          <button className="btn" onClick={onApplyAll}>Use this layout for all banks</button>
           <button className="btn" onClick={onCopyBank}>Save as a new bank</button>
           <button className="btn" onClick={onReset}>Reset to the Excel positions</button>
           <button className="btn danger-outline" onClick={onDeleteBank} disabled={!canDelete}>Delete this bank</button>

@@ -1,7 +1,7 @@
-import { Mark, IconPrint } from './icons.jsx'
+import { Mark, IconPrint, IconCopy } from './icons.jsx'
 import { pageSize } from '../lib/layout.js'
 
-export default function TopBar({ profiles, bankIdx, setBankIdx, profile, tickedCount, onPrint }) {
+export default function TopBar({ profiles, bankIdx, setBankIdx, profile, tickedCount, onPrint, onApplyAll, linked }) {
   const [W, H] = pageSize(profile)
   return (
     <header className="topbar">
@@ -16,6 +16,13 @@ export default function TopBar({ profiles, bankIdx, setBankIdx, profile, tickedC
           {profiles.map((b, i) => <option key={i} value={i}>{b.name}</option>)}
         </select>
       </label>
+      {linked ? (
+        <span className="linked-chip" title="Changes to the layout apply to every bank">All banks match</span>
+      ) : (
+        <button className="btn" onClick={onApplyAll} title="Copy this bank's layout to every other bank">
+          <IconCopy /> <span className="btn-text">Apply to all banks</span>
+        </button>
+      )}
       <span className="page-chip">{profile.mode === 'a4' ? 'A4 landscape' : 'Custom'} · {W} × {H} mm</span>
       <span className="grow" />
       <button className="btn primary lg" onClick={onPrint} disabled={!tickedCount}>
