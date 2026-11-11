@@ -17,7 +17,9 @@ function Segmented({ value, options, onChange, label }) {
 }
 
 /* ------------------------------------------------------------------ Cheque */
-function ChequeTab({ entry, patch, currency, onAdd, onDuplicate }) {
+function ChequeTab({ entry, patch, currency, onAdd, onDuplicate, profile, patchField }) {
+  const dateOn = ['day', 'month', 'year'].every((k) => profile.fields[k].on)
+  const setDateOn = (v) => ['day', 'month', 'year'].forEach((k) => patchField(k, { on: v }))
   const payeeRef = useRef(null)
   // an empty new cheque puts the cursor straight into Payee
   useEffect(() => { if (!entry.payee) payeeRef.current?.focus() }, [entry.id]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -38,9 +40,14 @@ function ChequeTab({ entry, patch, currency, onAdd, onDuplicate }) {
               value={entry.amount === 0 ? '' : entry.amount} onChange={(e) => patch({ amount: parseFloat(e.target.value) || 0 })} />
           </span>
         </Field>
-        <Field label="Date">
-          <input type="date" value={entry.date} onChange={(e) => patch({ date: e.target.value })} />
-        </Field>
+        <div className={`field${dateOn ? '' : ' is-off'}`}>
+          <div className="label-row">
+            <span className="field-label">Date</span>
+            <Switch checked={dateOn} onChange={setDateOn} label="Print" />
+          </div>
+          <input type="date" aria-label="Date" value={entry.date} onChange={(e) => patch({ date: e.target.value })} />
+          {!dateOn && <span className="field-hint">Not printed on the cheque</span>}
+        </div>
       </div>
       <div className="two">
         <Field label="Cheque number"><input type="text" value={entry.no} onChange={(e) => patch({ no: e.target.value })} /></Field>
