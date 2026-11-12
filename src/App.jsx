@@ -8,6 +8,7 @@ import { ConfirmDialog, ImportDialog, PrintDialog, PromptDialog } from './compon
 import { Toasts } from './components/ui.jsx'
 import { DEFAULT_BANKS, incNo, migrateProfile, newProfile, todayISO } from './lib/layout.js'
 import { useLocalStorage } from './lib/useLocalStorage.js'
+import { buildBackup, downloadText, parseBackup } from './lib/backup.js'
 
 /** Reuse layouts saved by earlier versions (positions untouched); date becomes Day / Month / Year. */
 function loadProfiles() {
@@ -103,6 +104,25 @@ export default function App({ security }) {
       type: 'confirm', title: 'Keep all banks the same?', confirmLabel: 'Keep the same',
       message: `All banks are set to match ${profile.name} now. From then on, any change to positions, sizes, colours or date settings is applied to every bank.`,
       onConfirm: () => { copyLayoutToAll(); patchSettings({ linkBanks: true }); closeDialog(); toast('All banks now match') },
+    })
+  }
+  const exportBackup = (withCheques) => {
+    const stamp = new Date().toISOString().slice(0, 10)
+    downloadText(`cheque-maker-backup-${stamp}.json`, JSON.stringify(buildBackup({ profiles, settings, bankIdx: bi, entries }, withCheques), null, 2))
+    toast('Backup saved. Check your Downloads folder.')
+  }
+  const importBackup = (text) => {
+    let b
+    try { b = parseBackup(text) } catch (e) { return toast(e.message) }
+    setDialog({
+      type: 'confirm', title: 'Open this backup?', confirmLabel: 'Replace my layouts',
+      message: `This replaces the ${profiles.length} bank layouts and settings on this computer with the ${b.profiles.length} in the file${b.entries ? ', and the cheque list too' : ''}. Your cheques are kept unless the file includes a cheque list.`,
+      onConfirm: () => {
+        setProfiles(b.profiles); setBankIdx(b.bankIdx)
+        if (b.settings) setSettings((s) => ({ ...s, ...b.settings }))
+        if (b.entries) { setEntries(b.entries); setSel(0) }
+        closeDialog(); toast('Backup opened')
+      },
     })
   }
   const resetData = () => setDialog({
@@ -203,7 +223,7 @@ export default function App({ security }) {
             bg={bg} setBg={setBg} bgOpacity={bgOpacity} setBgOpacity={setBgOpacity}
             onCalibrate={() => setJob({ calibration: true })}
             onReset={resetBank} onCopyBank={addBank} onApplyAll={applyToAll} linked={linked} onToggleLink={toggleLink} onDeleteBank={deleteBank} canDelete={profiles.length > 1}
-            settings={settings} patchSettings={patchSettings} onResetData={resetData} security={security}
+            settings={settings} patchSettings={patchSettings} onResetData={resetData} security={security} onExportBackup={exportBackup} onImportBackup={importBackup}
           />
         </div>
       </div>
@@ -216,4 +236,4 @@ export default function App({ security }) {
       <PrintSheet job={job} profile={profile} settings={settings} onDone={onPrintDone} />
     </>
   )
-} 
+}

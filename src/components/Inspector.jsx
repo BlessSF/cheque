@@ -3,6 +3,8 @@ import { ColorField, Field, NumberBox, NumInput, Switch, Tabs } from './ui.jsx'
 import { IconCopy, IconPlus, IconPrint, IconWarn } from './icons.jsx'
 import { amountWords } from '../lib/words.js'
 import PasscodeGroup from './PasscodeGroup.jsx'
+import BackupGroup from './BackupGroup.jsx'
+import { AUTHOR, COPYRIGHT } from '../lib/credit.js'
 
 const round1 = (v) => Math.round(v * 10) / 10
 const FONTS = ['Arial', 'Calibri', 'Courier New', 'Times New Roman', 'Verdana']
@@ -274,7 +276,7 @@ function DateTab({ profile, locked, patchField, patchProfile }) {
 }
 
 /* ----------------------------------------------------------------- Options */
-function OptionsTab({ settings, patchSettings, onResetData, security }) {
+function OptionsTab({ settings, patchSettings, onResetData, security, onExportBackup, onImportBackup }) {
   return (
     <div className="stack">
       <section className="group">
@@ -290,11 +292,18 @@ function OptionsTab({ settings, patchSettings, onResetData, security }) {
           <input type="text" value={settings.nextNo} onChange={(e) => patchSettings({ nextNo: e.target.value })} />
         </Field>
       </section>
+      <BackupGroup onExport={onExportBackup} onImport={onImportBackup} />
       {security && <PasscodeGroup security={security} />}
       <section className="group">
         <h3>Saved data</h3>
         <p className="help">Cheques, layouts and settings are saved in this browser on this computer only.</p>
         <button className="btn danger-outline" onClick={onResetData}>Erase saved data</button>
+      </section>
+      <section className="group">
+        <h3>About</h3>
+        <p className="about-name">Cheque Maker</p>
+        <p className="help">Designed and built by <b>{AUTHOR}</b>.</p>
+        <p className="help">{COPYRIGHT}. All rights reserved. Please don't copy, resell or share this system without permission.</p>
       </section>
     </div>
   )
