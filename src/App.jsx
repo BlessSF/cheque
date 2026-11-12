@@ -125,6 +125,12 @@ export default function App({ security }) {
       },
     })
   }
+  // One layout for every computer: all banks get this bank's layout, saved as a file that goes into the website.
+  const publishLayout = () => {
+    const all = profiles.map((b) => ({ ...JSON.parse(JSON.stringify(profile)), name: b.name }))
+    downloadText('default-layout.json', JSON.stringify({ kind: 'cheque-maker-shared-layout', id: Date.now(), savedAt: new Date().toISOString(), profiles: all }, null, 2))
+    toast('default-layout.json saved. Put it in the src folder, then push.')
+  }
   const resetData = () => setDialog({
     type: 'confirm', title: 'Erase all saved data?', danger: true, confirmLabel: 'Erase and restart',
     message: 'This removes every cheque, bank layout and setting saved in this browser. It cannot be undone.',
@@ -223,7 +229,7 @@ export default function App({ security }) {
             bg={bg} setBg={setBg} bgOpacity={bgOpacity} setBgOpacity={setBgOpacity}
             onCalibrate={() => setJob({ calibration: true })}
             onReset={resetBank} onCopyBank={addBank} onApplyAll={applyToAll} linked={linked} onToggleLink={toggleLink} onDeleteBank={deleteBank} canDelete={profiles.length > 1}
-            settings={settings} patchSettings={patchSettings} onResetData={resetData} security={security} onExportBackup={exportBackup} onImportBackup={importBackup}
+            settings={settings} patchSettings={patchSettings} onResetData={resetData} security={security} onPublishLayout={publishLayout} onExportBackup={exportBackup} onImportBackup={importBackup}
           />
         </div>
       </div>

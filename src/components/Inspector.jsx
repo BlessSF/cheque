@@ -276,7 +276,7 @@ function DateTab({ profile, locked, patchField, patchProfile }) {
 }
 
 /* ----------------------------------------------------------------- Options */
-function OptionsTab({ settings, patchSettings, onResetData, security, onExportBackup, onImportBackup }) {
+function OptionsTab({ settings, patchSettings, onResetData, security, onExportBackup, onImportBackup, onPublishLayout }) {
   return (
     <div className="stack">
       <section className="group">
@@ -292,7 +292,7 @@ function OptionsTab({ settings, patchSettings, onResetData, security, onExportBa
           <input type="text" value={settings.nextNo} onChange={(e) => patchSettings({ nextNo: e.target.value })} />
         </Field>
       </section>
-      <BackupGroup onExport={onExportBackup} onImport={onImportBackup} />
+      <BackupGroup onExport={onExportBackup} onImport={onImportBackup} onPublish={onPublishLayout} />
       {security && <PasscodeGroup security={security} />}
       <section className="group">
         <h3>Saved data</h3>
