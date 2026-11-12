@@ -4,6 +4,7 @@ import { IconCopy, IconPlus, IconPrint, IconWarn } from './icons.jsx'
 import { amountWords } from '../lib/words.js'
 import PasscodeGroup from './PasscodeGroup.jsx'
 import BackupGroup from './BackupGroup.jsx'
+import AmountInput from './AmountInput.jsx'
 import { AUTHOR, COPYRIGHT } from '../lib/credit.js'
 
 const round1 = (v) => Math.round(v * 10) / 10
@@ -39,8 +40,7 @@ function ChequeTab({ entry, patch, currency, onAdd, onDuplicate, profile, patchF
       <div className="two">
         <Field label="Amount">
           <span className="num big">
-            <input type="number" step="0.01" min="0" inputMode="decimal" placeholder="0.00"
-              value={entry.amount === 0 ? '' : entry.amount} onChange={(e) => patch({ amount: parseFloat(e.target.value) || 0 })} />
+            <AmountInput value={entry.amount} onChange={(v) => patch({ amount: v })} />
           </span>
         </Field>
         <div className={`field${dateOn ? '' : ' is-off'}`}>
